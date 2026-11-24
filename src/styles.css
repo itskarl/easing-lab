@@ -216,7 +216,17 @@ a { color: inherit; text-underline-offset: 3px; }
   border-bottom: 1px solid var(--line);
 }
 .card--wide .card__stage { min-height: 0; padding: 22px 20px; }
-.card__meta { padding: 12px 14px 14px; }
+.card__meta { padding: 12px 14px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.card__stage { cursor: pointer; }
+.card__play {
+  flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.card__play svg { width: 13px; height: 13px; fill: currentColor; margin-left: 2px; }
+.card__play:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.card__play:active { transform: scale(0.9); }
+.card:has(.card__stage:hover) .card__play { border-color: var(--ink); }
 .card__meta h3 { font-size: 14px; font-weight: 600; }
 .card__meta p { color: var(--muted); font-size: 13px; }
 

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { Resolved } from "../easing";
 
 /** Run a Web Animation with the exact easing string the export panel hands out. */
@@ -23,13 +23,31 @@ function useOnPlay(playId: number, effect: () => (Animation | undefined)[] | voi
   }, [playId]);
 }
 
+/** Lets a card replay only its own preview. Provided by Slot, read by Card. */
+const PlayOne = createContext<(() => void) | null>(null);
+
+/** Gives one preview its own play counter on top of the global one, so it can replay alone. */
+function Slot({ playId, children }: { playId: number; children: (id: number) => ReactNode }) {
+  const [local, setLocal] = useState(0);
+  return <PlayOne.Provider value={() => setLocal((n) => n + 1)}>{children(playId + local)}</PlayOne.Provider>;
+}
+
 function Card({ title, note, children, wide }: { title: string; note: string; children: ReactNode; wide?: boolean }) {
+  const play = useContext(PlayOne);
   return (
     <article className={wide ? "card card--wide" : "card"}>
-      <div className="card__stage">{children}</div>
+      {/* The stage is a mouse shortcut; the button is the accessible way to replay. */}
+      <div className="card__stage" onClick={play ?? undefined}>{children}</div>
       <div className="card__meta">
-        <h3>{title}</h3>
-        <p>{note}</p>
+        <div>
+          <h3>{title}</h3>
+          <p>{note}</p>
+        </div>
+        {play && (
+          <button type="button" className="card__play" onClick={play} aria-label={`Play ${title}`}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6l7.6-4.8z" /></svg>
+          </button>
+        )}
       </div>
     </article>
   );
@@ -228,13 +246,13 @@ function Drawer({ r, playId }: { r: Resolved; playId: number }) {
 export function Previews({ a, b, playId }: { a: Resolved; b: Resolved | null; playId: number }) {
   return (
     <div className="previews">
-      <Track a={a} b={b} playId={playId} />
-      <Modal r={a} playId={playId} />
-      <Toast r={a} playId={playId} />
-      <Reorder r={a} playId={playId} />
-      <Expand r={a} playId={playId} />
-      <Drawer r={a} playId={playId} />
-      <Toggle r={a} playId={playId} />
+      <Slot playId={playId}>{(id) => <Track a={a} b={b} playId={id} />}</Slot>
+      <Slot playId={playId}>{(id) => <Modal r={a} playId={id} />}</Slot>
+      <Slot playId={playId}>{(id) => <Toast r={a} playId={id} />}</Slot>
+      <Slot playId={playId}>{(id) => <Reorder r={a} playId={id} />}</Slot>
+      <Slot playId={playId}>{(id) => <Expand r={a} playId={id} />}</Slot>
+      <Slot playId={playId}>{(id) => <Drawer r={a} playId={id} />}</Slot>
+      <Slot playId={playId}>{(id) => <Toggle r={a} playId={id} />}</Slot>
     </div>
   );
 }
